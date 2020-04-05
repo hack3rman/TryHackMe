@@ -79,4 +79,7 @@ Now we know how many characters we need to iterate thorugh to get the data.
 
 Extraction time. Being the password is really long we need some automation. We can do it in OWASP Zap I figure but I am not sure if it's easy to trasnfer out the data. A python script should work. :) 
 
-```
+I did the last part in  https://github.com/hack3rman/TryHackMe/blob/master/db-blind.py 
+
+## Note
+I just started in the security business and only have some experience as System Administrator. The guide might not be perfect but I await your input. Good luck!
