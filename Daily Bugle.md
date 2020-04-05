@@ -2,6 +2,8 @@
 
 ### Introduction
 
+Room hosted at https://tryhackme.com/
+
 I tried doing this room without `sqlmap` as OSCP does not allow it in the exam. I wanted to see at least how you can take advantage of the blind sql injecion. 
 
 All the write-ups for this room were using sqlmap and I will discuss how I did it without it. This will possibly help you as I could not find a straight forward guide on this exact setup.
