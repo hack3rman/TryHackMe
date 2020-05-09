@@ -300,5 +300,5 @@ uid=0(root) gid=0(root)
 lago      proof.sh
 ```
 
-###Conclusion
-Wow. That was quite a ride. Spawning 2 days it combined both CTF and real world issues I guess. In the end the creds.txt and the root program were just rabbit hole. I really liked this room (even more I could beat it myself). Get it touch for feedback :)
+### Conclusion
+Wow. That was quite a ride. Spawning 2 days it combined both CTF and real world issues I guess. In the end the creds.txt and the root program were just rabbit holes. I really liked this room (even more I could beat it myself). Get it touch for feedback :)
